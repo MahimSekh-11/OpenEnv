@@ -1,8 +1,10 @@
-import os
-import uvicorn
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
+import uvicorn
+import os
 
 from env import SupportEnv
 from tasks import TASKS
@@ -16,20 +18,17 @@ env_instance = SupportEnv(TASKS)
 class StepRequest(BaseModel):
     action: Action
 
-@app.get("/")
-async def root():
-    return {
-        "status": "online",
-        "env": "SupportAgentEnv",
-        "version": "1.0.0",
-        "message": "Welcome to the SupportAgent OpenEnv API. Use /reset to start."
-    }
+# API Routes
+@app.get("/api/health")
+@app.get("/health")
+async def health():
+    return {"status": "online", "env": "SupportAgentEnv"}
 
+@app.post("/api/reset")
 @app.post("/reset")
 async def reset():
     try:
         result = await env_instance.reset()
-        # Ensure we return a serializable dict
         obs = result["observation"]
         return {
             "observation": obs.model_dump() if hasattr(obs, 'model_dump') else obs.dict(),
@@ -40,6 +39,7 @@ async def reset():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/step")
 @app.post("/step")
 async def step(request: StepRequest):
     try:
@@ -54,6 +54,7 @@ async def step(request: StepRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/state")
 @app.get("/state")
 async def state():
     try:
@@ -62,9 +63,25 @@ async def state():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Serve Frontend
+dist_path = os.path.join(os.getcwd(), "dist")
+if os.path.exists(dist_path):
+    app.mount("/assets", StaticFiles(directory=os.path.join(dist_path, "assets")), name="assets")
+    
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        # If the path looks like an API call, let it fall through
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404)
+        
+        # Serve index.html for all other routes
+        index_file = os.path.join(dist_path, "index.html")
+        return FileResponse(index_file)
+else:
+    @app.get("/")
+    async def root():
+        return {"message": "Frontend not built. Run 'npm run build' first.", "api_status": "online"}
+
 if __name__ == "__main__":
-    # Default to 3000 for AI Studio preview. 
-    # Hugging Face Spaces will provide a PORT environment variable (usually 7860).
     port = int(os.getenv("PORT", 3000))
-    # host="0.0.0.0" is required for both AI Studio and HF Spaces
     uvicorn.run(app, host="0.0.0.0", port=port)

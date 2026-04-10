@@ -13,8 +13,13 @@ from models import Action
 # Configuration from environment variables
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o")
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY")
+HF_TOKEN = os.getenv("HF_TOKEN")
 
+# For local testing if HF_TOKEN is not set
+if not HF_TOKEN:
+    HF_TOKEN = os.getenv("OPENAI_API_KEY")
+
+BENCHMARK = "SupportAgentEnv"
 MAX_STEPS = 5
 TEMPERATURE = 0.0
 
@@ -106,7 +111,10 @@ async def run_task(client: OpenAI, task_index: int):
         print(f"[DEBUG] Task execution failed: {e}")
 
 async def main():
-    client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+    if not HF_TOKEN:
+        print("[DEBUG] Warning: HF_TOKEN or OPENAI_API_KEY not set.")
+        
+    client = OpenAI(base_url=API_BASE_URL, api_key=HF_TOKEN)
     for i in range(len(TASKS)):
         await run_task(client, i)
 
