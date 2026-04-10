@@ -1,0 +1,5 @@
+{
+  "name": "SupportAgent OpenEnv",
+  "description": "A real-world customer support ticket triage and response environment for AI agents.",
+  "requestFramePermissions": []
+}

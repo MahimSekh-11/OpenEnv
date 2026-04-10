@@ -1,0 +1,42 @@
+name: SupportAgentEnv
+version: 1.0.0
+description: A real-world customer support ticket triage and response environment.
+tasks:
+  - name: password_reset
+    difficulty: easy
+    description: Categorize and respond to a password reset request.
+  - name: billing_update
+    difficulty: medium
+    description: Guide a user to the billing portal for credit card updates.
+  - name: complex_shipping_issue
+    difficulty: hard
+    description: Handle a multi-part request involving delays, refunds, and address updates.
+action_space:
+  type: object
+  properties:
+    action_type:
+      type: string
+      enum: [categorize, respond, close]
+    category:
+      type: string
+      nullable: true
+    message:
+      type: string
+      nullable: true
+observation_space:
+  type: object
+  properties:
+    ticket_id:
+      type: string
+    content:
+      type: string
+    history:
+      type: array
+      items:
+        type: object
+    available_categories:
+      type: array
+      items:
+        type: string
+    status:
+      type: string
