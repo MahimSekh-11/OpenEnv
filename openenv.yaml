@@ -1,6 +1,7 @@
 name: SupportAgentEnv
 version: 1.0.0
 description: A real-world customer support ticket triage and response environment.
+server: openenv-server
 tasks:
   - name: password_reset
     difficulty: easy
