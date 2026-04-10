@@ -56,6 +56,7 @@ async def run_task(client: OpenAI, task_index: int):
     
     rewards = []
     steps_taken = 0
+    final_score = 0.0
     
     try:
         reset_result = await env.reset()
@@ -64,7 +65,7 @@ async def run_task(client: OpenAI, task_index: int):
         for step in range(1, MAX_STEPS + 1):
             # Build prompt
             history_str = json.dumps(obs.history, indent=2)
-            user_prompt = f"Current Ticket Content: {obs.content}\nHistory: {history_str}\nStatus: {obs.status}\nWhat is your next action?"
+            user_prompt = f"Current Ticket Content: {obs.content}\nHistory: {history_str}\nStatus: {obs.status}\nWhat is your next action? Respond with JSON."
             
             try:
                 completion = client.chat.completions.create(
@@ -84,8 +85,8 @@ async def run_task(client: OpenAI, task_index: int):
 
             step_result = await env.step(action)
             obs = step_result["observation"]
-            reward = step_result["reward"]
-            done = step_result["done"]
+            reward = float(step_result["reward"])
+            done = bool(step_result["done"])
             
             rewards.append(reward)
             steps_taken = step
@@ -96,13 +97,13 @@ async def run_task(client: OpenAI, task_index: int):
                 break
         
         final_score = sum(rewards)
-        # Normalize score to [0, 1] - for this env, max reward is roughly 1.0 per task
+        # Normalize score to [0, 1]
         final_score = min(max(final_score, 0.0), 1.0)
-        log_end(success=(final_score > 0.7), steps=steps_taken, score=final_score, rewards=rewards)
+        log_end(success=(final_score >= 0.7), steps=steps_taken, score=final_score, rewards=rewards)
         
     except Exception as e:
         log_end(success=False, steps=steps_taken, score=0.0, rewards=rewards)
-        print(f"Error: {e}")
+        print(f"[DEBUG] Task execution failed: {e}")
 
 async def main():
     client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)

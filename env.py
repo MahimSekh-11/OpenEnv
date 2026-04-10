@@ -59,16 +59,19 @@ class SupportEnv:
                 explanation = "Invalid category."
 
         elif action.action_type == "respond":
-            self.history.append({"role": "agent", "content": f"Response: {action.message}"})
-            # Check if response contains keywords (max 0.3)
-            keywords = self.current_task.get("required_keywords", [])
-            if not keywords:
-                reward_val = 0.3
-                explanation = "Response sent."
+            if not action.message:
+                explanation = "Empty message."
             else:
-                matches = [k for k in keywords if k.lower() in action.message.lower()]
-                reward_val = 0.3 * (len(matches) / len(keywords))
-                explanation = f"Response addressed {len(matches)}/{len(keywords)} key points."
+                self.history.append({"role": "agent", "content": f"Response: {action.message}"})
+                # Check if response contains keywords (max 0.3)
+                keywords = self.current_task.get("required_keywords", [])
+                if not keywords:
+                    reward_val = 0.3
+                    explanation = "Response sent."
+                else:
+                    matches = [k for k in keywords if k.lower() in action.message.lower()]
+                    reward_val = 0.3 * (len(matches) / len(keywords))
+                    explanation = f"Response addressed {len(matches)}/{len(keywords)} key points."
 
         elif action.action_type == "close":
             self.current_status = "closed"
@@ -77,6 +80,14 @@ class SupportEnv:
             final_bonus = self.current_task["grader"](self) * 0.5
             reward_val = final_bonus
             explanation = "Ticket closed. Final evaluation complete."
+            self.score += reward_val
+
+        return {
+            "observation": self._get_obs(),
+            "reward": float(reward_val),
+            "done": bool(self.is_done),
+            "info": {"explanation": explanation}
+        }
 
         return {
             "observation": self._get_obs(),

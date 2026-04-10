@@ -1,3 +1,15 @@
+---
+title: SupportAgent OpenEnv
+emoji: 🤖
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+app_port: 7860
+tags:
+  - openenv
+---
+
 # SupportAgentEnv: Customer Support Triage & Response
 
 A real-world OpenEnv environment for evaluating AI agents on customer support tasks.

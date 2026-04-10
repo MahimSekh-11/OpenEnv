@@ -2,3 +2,5 @@ pydantic
 openai
 asyncio
 pyyaml
+fastapi
+uvicorn

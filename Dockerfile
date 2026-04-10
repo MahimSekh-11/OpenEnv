@@ -10,4 +10,6 @@ COPY . .
 # OpenEnv metadata
 LABEL openenv=true
 
-CMD ["python", "inference.py"]
+EXPOSE 7860
+
+CMD ["python", "app.py"]
