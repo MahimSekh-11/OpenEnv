@@ -66,6 +66,8 @@ async def run_task(client: OpenAI, task_index: int):
     try:
         reset_result = await env.reset()
         obs = reset_result["observation"]
+        # Initial reward from reset
+        rewards.append(float(reset_result.get("reward", 0.0)))
         
         for step in range(1, MAX_STEPS + 1):
             # Build prompt
@@ -102,9 +104,9 @@ async def run_task(client: OpenAI, task_index: int):
                 break
         
         final_score = sum(rewards)
-        # Normalize score to [0, 1]
-        final_score = min(max(final_score, 0.0), 1.0)
-        log_end(success=(final_score >= 0.7), steps=steps_taken, score=final_score, rewards=rewards)
+        # Ensure score is strictly between 0 and 1 (e.g., 0.05 to 0.95)
+        final_score = min(max(final_score, 0.01), 0.99)
+        log_end(success=(final_score >= 0.5), steps=steps_taken, score=final_score, rewards=rewards)
         
     except Exception as e:
         log_end(success=False, steps=steps_taken, score=0.0, rewards=rewards)

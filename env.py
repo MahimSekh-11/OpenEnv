@@ -5,6 +5,7 @@ from models import Action, Observation, Reward, State
 class SupportEnv:
     def __init__(self, tasks: List[Dict[str, Any]]):
         self.tasks = tasks
+        self.task_map = {t["name"]: i for i, t in enumerate(tasks)}
         self.current_task_index = 0
         self.history = []
         self.is_done = False
@@ -12,18 +13,23 @@ class SupportEnv:
         self.categories = ["billing", "technical", "account", "shipping", "general"]
         self.reset_state()
 
-    def reset_state(self):
+    def reset_state(self, task_name: Optional[str] = None):
+        if task_name and task_name in self.task_map:
+            self.current_task_index = self.task_map[task_name]
+        
         self.current_task = self.tasks[self.current_task_index]
         self.history = [{"role": "system", "content": f"New ticket received: {self.current_task['content']}"}]
         self.is_done = False
         self.current_status = "open"
         self.assigned_category = None
+        # Start with a small "participation" reward to stay above 0.0
+        self.score = 0.05 
 
-    async def reset(self) -> Dict[str, Any]:
-        self.reset_state()
+    async def reset(self, task_name: Optional[str] = None) -> Dict[str, Any]:
+        self.reset_state(task_name)
         return {
             "observation": self._get_obs(),
-            "reward": 0.0,
+            "reward": 0.05, # Initial reward
             "done": False,
             "info": {}
         }
@@ -76,11 +82,17 @@ class SupportEnv:
         elif action.action_type == "close":
             self.current_status = "closed"
             self.is_done = True
-            # Final grading (max 0.5)
-            final_bonus = self.current_task["grader"](self) * 0.5
+            # Final grading (max 0.45, total max 0.95 with base 0.05)
+            final_bonus = self.current_task["grader"](self) * 0.45
             reward_val = final_bonus
             explanation = "Ticket closed. Final evaluation complete."
             self.score += reward_val
+
+        # Ensure reward_val doesn't push total score to exactly 1.0
+        # Total score = 0.05 (base) + 0.2 (cat) + 0.3 (resp) + 0.45 (grader) = 1.0
+        # We'll cap it at 0.95 to be "strictly between 0 and 1"
+        if self.score > 0.95:
+            self.score = 0.95
 
         return {
             "observation": self._get_obs(),

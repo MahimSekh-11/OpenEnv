@@ -24,11 +24,15 @@ class StepRequest(BaseModel):
 async def health():
     return {"status": "online", "env": "SupportAgentEnv"}
 
+class ResetRequest(BaseModel):
+    task_name: Optional[str] = None
+
 @app.post("/api/reset")
 @app.post("/reset")
-async def reset():
+async def reset(request: Optional[ResetRequest] = None):
     try:
-        result = await env_instance.reset()
+        task_name = request.task_name if request else None
+        result = await env_instance.reset(task_name)
         obs = result["observation"]
         return {
             "observation": obs.model_dump() if hasattr(obs, 'model_dump') else obs.dict(),
@@ -82,6 +86,9 @@ else:
     async def root():
         return {"message": "Frontend not built. Run 'npm run build' first.", "api_status": "online"}
 
-if __name__ == "__main__":
+def main():
     port = int(os.getenv("PORT", 3000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+if __name__ == "__main__":
+    main()
