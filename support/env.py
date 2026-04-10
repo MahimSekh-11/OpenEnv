@@ -1,6 +1,6 @@
 import asyncio
 from typing import List, Dict, Any, Optional
-from models import Action, Observation, Reward, State
+from .models import Action, Observation, Reward, State
 
 class SupportEnv:
     def __init__(self, tasks: List[Dict[str, Any]]):

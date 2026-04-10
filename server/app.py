@@ -6,9 +6,9 @@ from typing import List, Dict, Any, Optional
 import uvicorn
 import os
 
-from env import SupportEnv
-from tasks import TASKS
-from models import Action
+from support.env import SupportEnv
+from support.tasks import TASKS
+from support.models import Action
 
 app = FastAPI(title="SupportAgent OpenEnv API")
 

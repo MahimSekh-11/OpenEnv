@@ -6,9 +6,9 @@ from typing import List, Optional
 from openai import OpenAI
 
 # Import our environment
-from env import SupportEnv
-from tasks import TASKS
-from models import Action
+from support.env import SupportEnv
+from support.tasks import TASKS
+from support.models import Action
 
 # Configuration from environment variables
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
