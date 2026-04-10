@@ -5,6 +5,10 @@ from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 import uvicorn
 import os
+import sys
+
+# Add the project root to sys.path so 'support' can be found when running from server/
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from support.env import SupportEnv
 from support.tasks import TASKS
