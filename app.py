@@ -63,6 +63,8 @@ async def state():
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    # HF Spaces use port 7860
-    port = int(os.getenv("PORT", 7860))
+    # Default to 3000 for AI Studio preview. 
+    # Hugging Face Spaces will provide a PORT environment variable (usually 7860).
+    port = int(os.getenv("PORT", 3000))
+    # host="0.0.0.0" is required for both AI Studio and HF Spaces
     uvicorn.run(app, host="0.0.0.0", port=port)

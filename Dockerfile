@@ -9,7 +9,9 @@ COPY . .
 
 # OpenEnv metadata
 LABEL openenv=true
-
 EXPOSE 7860
+
+# Set default port for HF Spaces
+ENV PORT=7860
 
 CMD ["python", "app.py"]
